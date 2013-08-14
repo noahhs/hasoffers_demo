@@ -1,0 +1,6 @@
+- if !flash.empty?
+  %div{:style => "color:green"}= flash[:notice]
+  %div{:style => "color:red"}= flash[:error]
+  %br
+= yield
+

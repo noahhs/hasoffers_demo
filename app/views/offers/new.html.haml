@@ -1,0 +1,13 @@
+Create New Offer
+= form_for Offer.new do |f|
+  %p
+    = f.label :name, "Offer name"
+    = f.text_field :name
+  %p
+    = f.label :product_id, "Product ID"
+    = f.text_field :product_id
+  %p
+    = f.label :description, "Offer description"
+    = f.text_area :description
+  %p
+    = f.submit "Create offer"
