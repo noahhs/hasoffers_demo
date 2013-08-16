@@ -2,11 +2,14 @@ class Offer < ActiveRecord::Base
   include OffersHelper
   require 'rest-client'
   
-  #attr_accessor :hasoffers_data, :click_variables,
-  #              :name, :product_id, :description,
   attr_accessor             :creative_file_id  #temp?
+  serialize :click_variables
 
   def create
+    self.click_variables = ['affiliate_id', 'affiliate_name']
+    if ad_type == 'form_1'
+      self.click_variables << 'custom_var_1'<< 'custom_var_2'
+    end
     terms = { :Method => 'create',
               :Target => 'Offer',
               :data => { :name => name, 
@@ -14,6 +17,7 @@ class Offer < ActiveRecord::Base
                          :offer_url => 'temp',
                          :preview_url => 'temp',
                          :status => 'active',
+                         :show_custom_variables => 1,
                          :expiration_date => '2025-01-01' }}
     response = submit terms
     if success? response
@@ -22,7 +26,7 @@ class Offer < ActiveRecord::Base
       terms = { :Method => 'update',
                 :Target => 'Offer',
                 :id => id,
-                :data => { :offer_url => create_url(id, [:affiliate_id]),
+                :data => { :offer_url => create_url(id, click_variables),
                            :preview_url => create_url(id) }}
       response = submit terms
       if success? response

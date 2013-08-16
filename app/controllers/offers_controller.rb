@@ -7,9 +7,23 @@ class OffersController < ApplicationController
     @offer = Offer.find_by_id @id
     @hasoffers_data = @offer.hasoffers_data
     @product = Product.find_by_id @offer.product_id
+    @click_data = @offer.click_variables.inject([]) do |acc, cvar|
+      acc << [cvar, params[cvar]]
+    end
   end
 
   def convert
+    @offer = Offer.find_by_id params[:offer_id]
+    @affiliate_id = params[:affiliate_id]
+    @revenue = @offer.rps * params[:amount]
+    @payout = @offer.cps * params[:amount]
+    terms = { :Target => 'Conversion',
+              :Method  => 'create',
+              :data => { :offer_id => @offer.id,
+                         :affiliate_id => @affiliate_id,
+                         :payout => @payout,
+                         :revenue => @revenue }}
+    submit terms
   end
   
   #temp, just for debugging purposes
@@ -42,7 +56,6 @@ class OffersController < ApplicationController
         #end
       end
     end
-    render 'new'
   end
 
   def refresh

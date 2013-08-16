@@ -1,8 +1,8 @@
 class ProductsController < ApplicationController
   def create
-    @name = params[:name]
-    @product = Product.new @name
+    @product = Product.new
+    @product.name = name = params[:name]
     @product.save
-    flash[:notice] = "Product created! ID: #{ @product.id }"
+    flash[:notice] = "Product created! ID: #{ @product.id }, name: #{ name }"
   end
 end
