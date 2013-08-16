@@ -3,8 +3,10 @@ module OffersHelper
   require 'net/http'
   require 'net/http/post/multipart'
   
-  def querify_array(array) #not very good
-    array.inject("") { |acc, e| acc + "&#{ e }={#{ e }}" }
+  def create_url(id, click_variables = [])
+    offer_domain = 'http://offerstest.c44959.blueboxgrid.com:3000'
+    query = click_variables.inject("") { |acc, e| acc + "&#{ e }={#{ e }}" }
+    "#{ offer_domain }/offers/show?id=#{ id }#{ query }"
   end
   
   def success?(response_hash)

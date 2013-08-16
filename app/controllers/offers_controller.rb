@@ -2,27 +2,24 @@ class OffersController < ApplicationController
   include OffersHelper
   
   def show
-    @affiliate = nil
+    @affiliate_id = params[:affiliate_id]
     @id = params[:id]
     @offer = Offer.find_by_id @id
+    @hasoffers_data = @offer.hasoffers_data
     @product = Product.find_by_id @offer.product_id
-    @click_data = @offer.click_variables.inject({}) do |acc, var|
-      acc[var] = params[var]
-    end
-    @hasoffers_data = @order.hasoffers_data
-    #render :file => "offer_#{@id}.html.haml"
   end
 
   def convert
   end
   
-  #temp
+  #temp, just for debugging purposes
   def check
     terms = { :Method => 'findById',
               :Target => 'OfferFile',
               :id => 20 }
     response = submit terms
   end
+  
   def new
     @offer = Offer.new
   end
@@ -37,8 +34,12 @@ class OffersController < ApplicationController
       if (error_message = @offer.create_file offer_file).present?
         flash[:error] = "Request failed! #{ error_message }"
       else 
-        flash[:notice] = "Success! Offer ID: #{ @offer.id }, " \
-                       + "creative file ID: #{ @offer.creative_file_id }"
+        #if (error_message = @offer.create_tracking).present?
+        #  flash[:error] = "Request failed! #{ error_message }"
+        #else
+          flash[:notice] = "Success! Offer ID: #{ @offer.id }, " \
+                         + "creative file ID: #{ @offer.creative_file_id }"
+        #end
       end
     end
     render 'new'
