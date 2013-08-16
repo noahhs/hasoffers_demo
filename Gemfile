@@ -1,5 +1,11 @@
 source 'https://rubygems.org'
 
+gem 'curb'
+
+gem 'multipart-post'
+
+gem 'rest-client'
+
 gem 'pry-nav'
 
 gem 'pry'

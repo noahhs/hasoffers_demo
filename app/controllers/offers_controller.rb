@@ -1,4 +1,6 @@
 class OffersController < ApplicationController
+  include OffersHelper
+  
   def show
     @affiliate = nil
     @id = params[:id]
@@ -13,18 +15,31 @@ class OffersController < ApplicationController
 
   def convert
   end
-
+  
+  #temp
+  def check
+    terms = { :Method => 'findById',
+              :Target => 'OfferFile',
+              :id => 20 }
+    response = submit terms
+  end
   def new
     @offer = Offer.new
   end
 
   def create
-    @offer = Offer.new(params[:offer].to_h)
-    error_message = @offer.create
-    if error_message.present?
+    offer_attributes = params[:offer].to_h.reject {|e| e == 'offer_file' }
+    @offer = Offer.new(offer_attributes)
+    if (error_message = @offer.create).present?
       flash[:error] = "Request failed! #{ error_message }"
     else
-      flash[:notice] = "Success! ID: #{ @offer.id }"
+      offer_file = params[:offer][:offer_file]
+      if (error_message = @offer.create_file offer_file).present?
+        flash[:error] = "Request failed! #{ error_message }"
+      else 
+        flash[:notice] = "Success! Offer ID: #{ @offer.id }, " \
+                       + "creative file ID: #{ @offer.creative_file_id }"
+      end
     end
     render 'new'
   end
