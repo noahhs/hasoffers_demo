@@ -10,6 +10,7 @@ class OffersController < ApplicationController
     @click_data = @offer.click_variables.inject([]) do |acc, cvar|
       acc << [cvar, params[cvar]]
     end
+    @default_sale = 20
   end
 
   def convert
@@ -63,5 +64,4 @@ class OffersController < ApplicationController
       
     redirect_to :show
   end
-
 end

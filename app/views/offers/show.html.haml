@@ -11,6 +11,12 @@
 =#    HasOffers API information
 =#  = render :partial => "hasoffers"
 
-
-= @affiliate_id
-
+%p
+  %h3
+    Buy something
+  %br
+  = form_tag "/offers/convert", :affiliate_id => @affiliate_id, :offer_id => @offer.id do
+    = label_tag :amount, "Amount to buy"
+    = text_field_tag :amount
+    %br
+    = submit_tag "Buy!"
