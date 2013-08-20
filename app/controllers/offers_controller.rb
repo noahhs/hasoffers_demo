@@ -2,36 +2,42 @@ class OffersController < ApplicationController
   include OffersHelper
   
   def show
-    @affiliate_id = params[:affiliate_id]
-    @id = params[:id]
-    @offer = Offer.find_by_id @id
-    @hasoffers_data = @offer.hasoffers_data
-    @product = Product.find_by_id @offer.product_id
-    @click_data = @offer.click_variables.inject([]) do |acc, cvar|
-      acc << [cvar, params[cvar]]
+    on_success_of Offer.get(params[:id]) do |response|
+      @offer = response[:offer]
+      @hasoffers_data = @offer.hasoffers_data
+      @product = Product.find_by_id @offer.product_id
+      @click_data = @offer.click_variables.inject({}) do |acc, cvar|
+        acc[cvar] = params[cvar]; acc
+      end
     end
+    @affiliate_id = params[:affiliate_id]
     @default_sale = 20
+    @offer ||= Offer.new
   end
 
   def convert
-    @offer = Offer.find_by_id params[:offer_id]
-    @affiliate_id = params[:affiliate_id]
-    @revenue = @offer.rps * params[:amount]
-    @payout = @offer.cps * params[:amount]
-    terms = { :Target => 'Conversion',
-              :Method  => 'create',
-              :data => { :offer_id => @offer.id,
-                         :affiliate_id => @affiliate_id,
-                         :payout => @payout,
-                         :revenue => @revenue }}
-    submit terms
+    on_success_of Offer.get(params[:id]) do |response|
+      @offer = response[:offer]
+      terms = { :Target => 'Conversion',
+                :Method  => 'create',
+                :data => { :offer_id => @offer.id,
+                   :affiliate_id => params[:affiliate_id],
+                   :sale_amount => params[:amount],
+                   :payout => @offer.cps/100 * params[:amount].to_f,
+                   :revenue => @offer.rps/100 * params[:amount].to_f }}
+      on_success_of(submit terms) do |response|
+        id = response['data']['Conversion']['id']
+        flash[:notice] = "Success! Conversion id: " << id
+      end
+    end
+    @offer ||= Offer.new
   end
   
   #temp, just for debugging purposes
   def check
     terms = { :Method => 'findById',
               :Target => 'OfferFile',
-              :id => 20 }
+              :id => params[:id] }
     response = submit terms
   end
   
@@ -40,28 +46,30 @@ class OffersController < ApplicationController
   end
 
   def create
-    offer_attributes = params[:offer].to_h.reject {|e| e == 'offer_file' }
-    @offer = Offer.new(offer_attributes)
-    if (error_message = @offer.create).present?
-      flash[:error] = "Request failed! #{ error_message }"
-    else
+    @offer = Offer.new(params[:offer].to_h.reject {|e| e == 'offer_file' })
+    on_success_of @offer.create do |response|
+      offer_id = response[:offer].id
       offer_file = params[:offer][:offer_file]
-      if (error_message = @offer.create_file offer_file).present?
-        flash[:error] = "Request failed! #{ error_message }"
-      else 
-        #if (error_message = @offer.create_tracking).present?
-        #  flash[:error] = "Request failed! #{ error_message }"
-        #else
-          flash[:notice] = "Success! Offer ID: #{ @offer.id }, " \
-                         + "creative file ID: #{ @offer.creative_file_id }"
-        #end
+      on_success_of @offer.create_file(offer_file) do |response|
+        file_id = response['id']
+        flash[:notice] = "Success! Offer ID: #{ offer_id }, " \
+          + "creative file ID: #{ file_id }"
       end
     end
+    render 'new'
   end
 
-  def refresh
-    @offer.refresh
-      
-    redirect_to :show
-  end
+  private
+
+    def on_success_of api_response, &success_block
+      if (errors = api_response['errors']).present?
+        flash[:error] = ""
+        errors.each do |e|
+          flash[:error] << "\n" << "Request failed! " \
+          + "#{e['publicMessage']} #{e['err_msg']}: #{e['attribute_name']}"
+        end
+      else
+        success_block.call(api_response)
+      end
+    end
 end

@@ -10,9 +10,8 @@ Create New Offer
     = f.label :description, "Offer description"
     = f.text_area :description
   %p
-    = f.label :rpa, "Cost per conversion (CPA)"
-    - val = number_with_precision f.object.cost, :precision => 2
-    = f.text_field :rpa, :value => (val || 0)
+    = f.label :rps, "Cost per sale (CPS) %"
+    = f.text_field :rps
   %p
     = f.label :ad_type, "Ad type"
     = f.select :ad_type, [["Banner", 'banner'], ["Form type 1", 'form_1']]

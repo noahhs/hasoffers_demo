@@ -14,9 +14,10 @@
 %p
   %h3
     Buy something
-  %br
-  = form_tag "/offers/convert", :affiliate_id => @affiliate_id, :offer_id => @offer.id do
+  = form_tag "/offers/convert"  do
     = label_tag :amount, "Amount to buy"
     = text_field_tag :amount
+    = hidden_field_tag(:id, params[:id])
+    = hidden_field_tag(:affiliate_id, params[:affiliate_id])
     %br
     = submit_tag "Buy!"
